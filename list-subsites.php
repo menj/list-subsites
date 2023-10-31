@@ -26,10 +26,14 @@ function list_subsites($atts) {
             // If not cached, generate the list
             $sites = get_sites();
             $subsites = array();
+            $main_site_url = rtrim(network_site_url(), '/');
             foreach ($sites as $site) {
                 $details = get_blog_details($site->blog_id);
                 $name = esc_html($details->blogname);
-                $url = esc_url($details->siteurl);
+                $url = rtrim(esc_url($details->siteurl), '/');
+                if ($url === $main_site_url) {
+                    continue; // Skip the main site
+                }
                 $description = get_blog_option($site->blog_id, 'blogdescription');
                 if (empty($description)) {
                     $description = 'No tagline set';
