@@ -1,14 +1,23 @@
 <?php
 /*
 Plugin Name: List Subsites
-Description: A simple plugin to list all subsites in a WordPress Multisite installation.
-Version: 1.0
+Description: A simple plugin to list all subsites in a WordPress Multisite installation with sorting options.
+Version: 1.1
 Author: MENJ
 Author URI: https://menj.net
 */
 
-function list_subsites() {
+function list_subsites($atts) {
     if (is_multisite()) {
+        $atts = shortcode_atts(
+            array(
+                'sort' => 'name',
+                'order' => 'asc',
+            ),
+            $atts,
+            'list_subsites'
+        );
+
         // Check if the list is cached
         $cache_key = 'list_subsites_cache';
         $list = wp_cache_get($cache_key);
@@ -16,7 +25,7 @@ function list_subsites() {
         if (false === $list) {
             // If not cached, generate the list
             $sites = get_sites();
-            $list = '<ul class="list-subsites">';
+            $subsites = array();
             foreach ($sites as $site) {
                 $details = get_blog_details($site->blog_id);
                 $name = esc_html($details->blogname);
@@ -25,7 +34,27 @@ function list_subsites() {
                 if (empty($description)) {
                     $description = 'No tagline set';
                 }
-                $list .= "<li>$name - <a href='$url'>$url</a>: $description</li>";
+                $subsites[] = array(
+                    'name' => $name,
+                    'url' => $url,
+                    'description' => $description,
+                );
+            }
+
+            // Sort the subsites
+            usort($subsites, function ($a, $b) use ($atts) {
+                $key = $atts['sort'];
+                $order = $atts['order'];
+                if ($a[$key] == $b[$key]) {
+                    return 0;
+                }
+                return ($a[$key] < $b[$key]) ? -1 * $order : 1 * $order;
+            });
+
+            // Generate the list
+            $list = '<ul class="list-subsites">';
+            foreach ($subsites as $subsite) {
+                $list .= "<li>{$subsite['name']} - <a href='{$subsite['url']}'>{$subsite['url']}</a>: {$subsite['description']}</li>";
             }
             $list .= '</ul>';
 
