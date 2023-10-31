@@ -44,7 +44,7 @@ function list_subsites($atts) {
             // Sort the subsites
             usort($subsites, function ($a, $b) use ($atts) {
                 $key = $atts['sort'];
-                $order = $atts['order'];
+                $order = $atts['order'] === 'asc' ? 1 : -1;
                 if ($a[$key] == $b[$key]) {
                     return 0;
                 }
